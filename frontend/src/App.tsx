@@ -1,12 +1,21 @@
 import {useEffect, useRef, useState} from 'react'
+import {axiosLoadData} from "./api/axios.ts";
+import {Simulate} from "react-dom/test-utils";
+import load = Simulate.load;
 
 function App() {
     const mapRef = useRef(null);
     const lat = 37.3595704// 위도 숫자로 넣어주기
     const lng = 127.105399// 경도 숫자로 넣어주기
 
+    const loadData = async () => {
+        return await axiosLoadData()
+
+    }
+
         useEffect(() => {
             const { naver } = window;
+            loadData().then(r => console.log(r))
             if (mapRef.current && naver) {
                 const location = new naver.maps.LatLng(lat, lng);
                 const map = new naver.maps.Map(mapRef.current, {
