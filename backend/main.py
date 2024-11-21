@@ -1,11 +1,9 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routers.getData import getData_Router
 
-from core.database import get_db, create_db
-import sqlalchemy
+from api.routers.dataRouter import data_router
+from api.routers.refreshRouter import refresh_router
+from core.database import create_db
 
 app = FastAPI(
     title="미세먼지 측정 서비스",
@@ -13,9 +11,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-app.include_router(getData_Router)
-
-
+app.include_router(refresh_router)
+app.include_router(data_router)
 origins = [
     "*"
 ]
@@ -28,9 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
 create_db()
 @app.get("/")
 async def pingPong():
-    return {"ping": "pong!"}
+    return {"ping": "pong!", "See":"/docs"}
