@@ -10,7 +10,7 @@ data_router = APIRouter(
     tags=["미세먼지 데이터"],
 )
 
-@data_router.get('/data')
+@data_router.get('')
 async def get_data(
     latitude: float = Query(..., description="위도"),
     longitude: float = Query(..., description="경도"),
@@ -24,6 +24,5 @@ async def get_data(
         latitude (float): 위도
         longitude (float): 경도
         radius (int): 검색 반경(미터)
-        db (Session): 데이터베이스 세션
     """
     return GetData.getDataByRadius(db, latitude, longitude, radius)

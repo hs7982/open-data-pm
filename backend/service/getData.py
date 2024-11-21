@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 class GetData:
     @staticmethod
-    def getDataByRadius(db: Session, latitude: float, longitude: float, radius: int = 10000):
+    def getDataByRadius(db: Session, latitude: float, longitude: float, radius: int = 20000):
         query = load_sql_query('pollution_queries.sql')
         result = db.execute(
             text(query),
