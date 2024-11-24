@@ -1,22 +1,26 @@
 import httpx
 from decouple import config
 from geoalchemy2 import WKTElement
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 import json
 
 from domain import Pollution
+from domain.station.entities import Station
 
 
 class APIReq:
     @staticmethod
-    async def get(type:str, db: Session):
+    async def get(type: str, db: AsyncSession):
         API_KEY = config('OPEN_API_KEY')
         API_RETURN_TYPE = 'json'
         API_SIDO = '전국'
 
         if type == "pollution":
+            print("#### 미세먼지 데이터 추가 시작")
             url = f'https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?serviceKey={API_KEY}&returnType={API_RETURN_TYPE}&numOfRows=1000&pageNo=1&sidoName={API_SIDO}&ver=1.5'
         elif type == "station":
+            print("#### 측정소 데이터 추가 시작")
             url = f'https://apis.data.go.kr/B552584/MsrstnInfoInqireSvc/getMsrstnList?serviceKey={API_KEY}&returnType={API_RETURN_TYPE}&numOfRows=1000&pageNo=1&sidoName={API_SIDO}&ver=1.1'
         else:
             raise Exception("잘못된 type입니다.")
@@ -39,18 +43,25 @@ class APIReq:
             raise Exception(f"API요청 중 상태코드 오류가 발행하였습니다: {e}")
 
     @staticmethod
-    async def save_station_data(data: dict, db: Session):
+    async def save_station_data(data: dict, db: AsyncSession):
         try:
+
             if isinstance(data, str):
                 data = json.loads(data)
             
             station_list = data.get("response", {}).get("body", {}).get("items", [])
-            
+            append_data=0
             for entry in station_list:
                 year = entry.get('year')
                 installation_year = int(year) if year and year.isdigit() else None
-                
-                from domain.station.entities import Station
+
+                stmt = select(Station).where(Station.station_code == entry.get('stationCode'))
+                result = await db.execute(stmt)
+                existing_station = result.scalar_one_or_none()
+
+                if existing_station:
+                    continue
+                append_data += 1
                 station = Station(
                     station_code=entry.get('stationCode'),
                     station_name=entry.get('stationName'),
@@ -65,14 +76,15 @@ class APIReq:
                 )
                 db.add(station)
             
-            db.commit()
+            await db.commit()
+            print("추가된 측정소 데이터: ",append_data,"개")
             
         except Exception as e:
-            db.rollback()
+            await db.rollback()
             raise Exception(f"Error saving station data: {str(e)}")
 
     @staticmethod
-    async def save_pollution_data(data: dict, db: Session):
+    async def save_pollution_data(data: dict, db: AsyncSession):
         try:
             if isinstance(data, str):
                 data = json.loads(data)
@@ -82,23 +94,23 @@ class APIReq:
                 if value is None or value == "-":
                     return None
                 return int(value) if t == int else float(value)
-
+            append_data = 0
             for entry in pollution_list:
                 from datetime import datetime
                 data_time_str = entry.get('dataTime')
                 data_time = datetime.strptime(data_time_str, '%Y-%m-%d %H:%M') if data_time_str else None
-                
-                # 동일한 station_code와 data_time을 가진 데이터가 있는지 확인
-                existing_pollution = db.query(Pollution).filter(
+
+                stmt = select(Pollution).where(
                     Pollution.station_code == entry.get('stationCode'),
                     Pollution.data_time == data_time
-                ).first()
+                )
+                result = await db.execute(stmt)
+                existing_pollution = result.scalar_one_or_none()
                 
-                # 이미 존재하는 데이터라면 건너뛰기
                 if existing_pollution:
-                    print("이미 존재하는 데이터 건너뜀")
                     continue
-                    
+                append_data += 1
+
                 pollution = Pollution(
                     station_code=entry.get('stationCode'),
                     data_time=data_time,
@@ -125,8 +137,9 @@ class APIReq:
                 )
                 db.add(pollution)
 
-            db.commit()
+            await db.commit()
+            print("추가된 미세먼지 데이터: ",append_data,"개")
 
         except Exception as e:
-            db.rollback()
+            await db.rollback()
             raise Exception(f"Error saving pollution data: {str(e)}")

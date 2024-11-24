@@ -19,21 +19,3 @@ class Station(Base):
     )
 
     pollution = relationship("Pollution")
-
-    # def __init__(self, **kwargs):
-    #     super().__init__()
-    #     for key, value in kwargs.items():
-    #         setattr(self, key, value)
-    #
-    # def __str__(self):
-    #     return (
-    #         f"Station("
-    #         f"station_code='{self.station_code}', "
-    #         f"station_name='{self.station_name}', "
-    #         f"addr='{self.addr}', "
-    #         f"installation_year={self.installation_year}, "
-    #         f"mang_name='{self.mang_name}', "
-    #         f"items='{self.items}', "
-    #         f"location={self.location}"
-    #         f")"
-    #     )

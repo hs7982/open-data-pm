@@ -1,13 +1,13 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from utils.sql_loader import load_sql_query
 from sqlalchemy import text
 
 
 class GetData:
     @staticmethod
-    def getDataByRadius(db: Session, latitude: float, longitude: float, radius: int = 20000):
+    async def getDataByRadius(db: AsyncSession, latitude: float, longitude: float, radius: int = 20000):
         query = load_sql_query('pollution_queries.sql')
-        result = db.execute(
+        result = await db.execute(
             text(query),
             {
                 "latitude": latitude,

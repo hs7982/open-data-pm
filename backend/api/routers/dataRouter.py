@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
-from service.APIReq import APIReq
 from service.getData import GetData
 
 data_router = APIRouter(
@@ -15,7 +14,7 @@ async def get_data(
     latitude: float = Query(..., description="위도"),
     longitude: float = Query(..., description="경도"),
     radius: int = Query(10000, description="검색 반경(미터)"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     지정된 위치 주변의 대기오염 데이터를 조회합니다.
@@ -25,4 +24,4 @@ async def get_data(
         longitude (float): 경도
         radius (int): 검색 반경(미터)
     """
-    return GetData.getDataByRadius(db, latitude, longitude, radius)
+    return await GetData.getDataByRadius(db, latitude, longitude, radius)

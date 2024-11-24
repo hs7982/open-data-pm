@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from service.APIReq import APIReq
@@ -14,7 +14,7 @@ refresh_router = APIRouter(
     description="OPEN API에서 최신 대기오염 측정 데이터를 가져와 반영합니다.",
     response_description="처리결과"
 )
-async def get_data(db: Session = Depends(get_db)):
+async def get_data(db: AsyncSession = Depends(get_db)):
     return await APIReq.get("pollution", db)
 
 @refresh_router.get('/station',
@@ -22,5 +22,5 @@ async def get_data(db: Session = Depends(get_db)):
     description="OPEN API에서 측정소 정보를 가져와 반영합니다.",
     response_description="처리결과",
 )
-async def get_data(db: Session = Depends(get_db)):
+async def get_data(db: AsyncSession = Depends(get_db)):
     return await APIReq.get("station", db)
