@@ -128,7 +128,7 @@ function NaverMap() {
     useEffect(() => {
         if (mapInstance && data.length > 0) {
             markers.forEach(marker => marker.setMap(null));
-            
+
             const { naver } = window;
             const info = new naver.maps.InfoWindow({
                 content: '',
@@ -158,7 +158,7 @@ function NaverMap() {
                         duration: 300,
                         easing: 'easeOutCubic'
                     });
-                    
+
                     setTimeout(() => {
                         // 줌 레벨 조정이 필요한 경우
                         if (mapInstance.getZoom() < 13) {
@@ -166,7 +166,7 @@ function NaverMap() {
                                 animate: true,
                                 duration: 200
                             });
-                            
+
                             // 줌 애니메이션이 완료된 후 InfoWindow 열기
                             setTimeout(() => {
                                 info.setContent(createInfoWindowContent(station));
@@ -192,10 +192,71 @@ function NaverMap() {
         }
     }, [mapInstance, data]);
 
+    // 현재 위치를 가져오는 함수
+    const getCurrentLocation = useCallback(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setCurrentLocation({
+                        lat: latitude,
+                        lng: longitude
+                    });
+
+                    // 지도가 존재하면 현재 위치로 부드럽게 이동
+                    if (mapInstance) {
+                        mapInstance.panTo(new naver.maps.LatLng(latitude, longitude), {
+                            duration: 500,
+                            easing: 'easeOutCubic'
+                        });
+                    }
+                },
+                (error) => {
+                    console.error('위치 정보를 가져오는데 실패했습니다:', error);
+                    alert('위치 정보를 가져오는데 실패했습니다. 위치 권한을 확인해주세요.');
+                }
+            );
+        } else {
+            alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.');
+        }
+    }, [mapInstance]);
+
+    // 컴포넌트 마운트 시 현재 위치 가져오기
+    useEffect(() => {
+        getCurrentLocation();
+    }, [mapInstance]);
+
     return (
-        <>
+        <div className="relative w-full h-full">
             <div ref={mapRef} style={{width: "100%", height: "100%"}}></div>
-        </>
+            
+            {/* 현위치 버튼 */}
+            <button
+                onClick={getCurrentLocation}
+                className="absolute bottom-6 right-6 bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors duration-200"
+                aria-label="내 위치로 이동"
+            >
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth={1.5} 
+                    stroke="currentColor" 
+                    className="w-6 h-6 text-gray-700"
+                >
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
+                    />
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" 
+                    />
+                </svg>
+            </button>
+        </div>
     );
 }
 
