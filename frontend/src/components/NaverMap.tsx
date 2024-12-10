@@ -28,7 +28,7 @@ const createInfoWindowContent = (station: Station) => `
         <h3 class="m-0 mb-2.5 text-gray-800 text-lg font-semibold border-b-2 border-gray-100 pb-2.5">
             ${station.station_name}
         </h3>
-        
+
         <div class="text-sm text-gray-600 leading-relaxed">
             <p class="my-1.5">
                 <strong>측정소 주소:</strong> ${station.addr}
@@ -39,12 +39,14 @@ const createInfoWindowContent = (station: Station) => `
             <div class="mt-4 pt-4 border-t border-gray-100">
                 <div class="flex justify-between items-center my-1.5">
                     <span><strong>미세먼지(PM10):</strong> ${station.pm10_value} ㎍/㎥</span>
+                    ${station.pm10_flag ? `<span class="text-xs text-red-500">${station.pm10_flag}</span>` : ''}
                     <span class="px-2 py-1 rounded text-xs text-white" style="background-color: ${getColorByGrade(station.pm10_grade)}">
                         ${getGradeText(station.pm10_grade)}
                     </span>
                 </div>
                 <div class="flex justify-between items-center my-1.5">
                     <span><strong>초미세먼지(PM2.5):</strong> ${station.pm2_5_value} ㎍/㎥</span>
+                    ${station.pm2_5_flag ? `<span class="text-xs text-red-500">${station.pm2_5_flag}</span>` : ''}
                     <span class="px-2 py-1 rounded text-xs text-white" style="background-color: ${getColorByGrade(station.pm2_5_grade)}">
                         ${getGradeText(station.pm2_5_grade)}
                     </span>
@@ -59,6 +61,7 @@ const createInfoWindowContent = (station: Station) => `
         </div>
     </div>
 `;
+
 
 function NaverMap() {
     const mapRef = useRef<HTMLDivElement>(null);
